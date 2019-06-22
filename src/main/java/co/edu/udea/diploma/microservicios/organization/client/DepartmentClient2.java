@@ -12,8 +12,8 @@ import co.edu.udea.diploma.microservicios.organization.model.Department;
 public interface DepartmentClient2 {
 
 	@GetMapping("/departments/organization/{organizationId}")
-	public List<Department> findByOrganization(@PathVariable("organizationId") Long organizationId);
+	public List<Department> findByOrganization(@PathVariable("organizationId") String organizationId);
 
 	@GetMapping("/departments/organization/{organizationId}/with-employees")
-	public List<Department> findByOrganizationWithEmployees(@PathVariable("organizationId") Long organizationId);
+	public List<Department> findByOrganizationWithEmployees(@PathVariable("organizationId") String organizationId);
 }

@@ -1,8 +1,9 @@
 package co.edu.udea.diploma.microservicios.organization.controller;
 
-import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import co.edu.udea.diploma.microservicios.organization.client.DepartmentClient2;
 import co.edu.udea.diploma.microservicios.organization.client.EmployeeClient2;
 import co.edu.udea.diploma.microservicios.organization.model.Organization;
-import co.edu.udea.diploma.microservicios.organization.repository.OrganizationRepository;
+import co.edu.udea.diploma.microservicios.organization.repository.OrganizationCRUDRepository;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -22,13 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OrganizationController {
 
 	@Autowired
-	OrganizationRepository repository;
-
-//	@Autowired
-//	EmployeeClient employeeClient;
-//
-//	@Autowired
-//	DepartmentClient departmentClient;
+	OrganizationCRUDRepository repository;
 
 	@Autowired
 	EmployeeClient2 employeeClient2;
@@ -37,47 +32,59 @@ public class OrganizationController {
 	DepartmentClient2 departmentClient2;
 
 	@PostMapping
-	public Organization add(@RequestBody Organization organization) {
+	public ResponseEntity<Organization> add(@RequestBody Organization organization) {
 		log.info("Organization add: {}", organization);
-		return repository.add(organization);
+		return ResponseEntity.ok(repository.save(organization));
 	}
 
 	@GetMapping
-	public List<Organization> findAll() {
+	public ResponseEntity<Iterable<Organization>> findAll() {
 		log.info("Organization find");
-		return repository.findAll();
+		return ResponseEntity.ok(repository.findAll());
 	}
 
 	@GetMapping("/{id}")
-	public Organization findById(@PathVariable("id") Long id) {
+	public ResponseEntity<Organization> findById(@PathVariable("id") String id) {
 		log.info("Organization find: id={}", id);
-		return repository.findById(id);
-	}
-
-	@GetMapping("/{id}/with-employees")
-	public Organization findByIdWithEmployees(@PathVariable("id") Long id) {
-		log.info("Organization find: id={}", id);
-		Organization organization = repository.findById(id);
-		//organization.setEmployees(employeeClient.findByOrganization(organization.getId()));
-		organization.setEmployees(employeeClient2.findByOrganization(organization.getId()));
-		return organization;
+		return ResponseEntity.ok(repository.findById(id).get());
 	}
 
 	@GetMapping("/{id}/with-departments")
-	public Organization findByIdWithDepartments(@PathVariable("id") Long id) {
+	public ResponseEntity<Organization> findByIdWithDepartments(@PathVariable("id") String id) {
 		log.info("Organization find: id={}", id);
-		Organization organization = repository.findById(id);
-		//organization.setDepartments(departmentClient.findByOrganization(organization.getId()));
-		organization.setDepartments(departmentClient2.findByOrganization(organization.getId()));
-		return organization;
+		Optional<Organization> organization = repository.findById(id);
+		if (organization.isPresent()) {
+			Organization o = organization.get();
+			o.setDepartments(departmentClient2.findByOrganization(o.getId()));
+			return ResponseEntity.ok(o);
+		} else {
+			return ResponseEntity.notFound().build();
+		}
 	}
 
 	@GetMapping("/{id}/with-departments-and-employees")
-	public Organization findByIdWithDepartmentsAndEmployees(@PathVariable("id") Long id) {
+	public ResponseEntity<Organization> findByIdWithDepartmentsAndEmployees(@PathVariable("id") String id) {
 		log.info("Organization find: id={}", id);
-		Organization organization = repository.findById(id);
-		//organization.setDepartments(departmentClient.findByOrganizationWithEmployees(organization.getId()));
-		organization.setDepartments(departmentClient2.findByOrganizationWithEmployees(organization.getId()));
-		return organization;
+		Optional<Organization> organization = repository.findById(id);
+		if (organization.isPresent()) {
+			Organization o = organization.get();
+			o.setDepartments(departmentClient2.findByOrganizationWithEmployees(o.getId()));
+			return ResponseEntity.ok(o);
+		} else {
+			return ResponseEntity.notFound().build();
+		}
+	}
+
+	@GetMapping("/{id}/with-employees")
+	public ResponseEntity<Organization> findByIdWithEmployees(@PathVariable("id") String id) {
+		log.info("Organization find: id={}", id);
+		Optional<Organization> organization = repository.findById(id);
+		if (organization.isPresent()) {
+			Organization o = organization.get();
+			o.setEmployees(employeeClient2.findByOrganization(o.getId()));
+			return ResponseEntity.ok(o);
+		} else {
+			return ResponseEntity.notFound().build();
+		}
 	}
 }
