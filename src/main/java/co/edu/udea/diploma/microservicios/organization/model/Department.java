@@ -18,7 +18,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 public class Department {
 
-	private Long id;
+	private String id;
 	private String name;
 	private List<Employee> employees = new ArrayList<>();
 
